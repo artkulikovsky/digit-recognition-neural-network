@@ -1,4 +1,4 @@
-# Neural Network from Scratch
+# Digit Recognition Neural Network
 
 A feedforward neural network implementation built entirely from scratch in TypeScript for MNIST digit classification.
 

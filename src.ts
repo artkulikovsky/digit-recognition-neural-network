@@ -5,27 +5,27 @@
 // Loss: cross-entropy
 
 // Xavier Initialization - used to prevent vanishing/exploding gradients
-// W[l] ~ Uniform(-limit, +limit)                     // uniform distribution (random values between -limit and +limit)
-// limit = sqrt(6 / (n_in + n_out))                   // n_in: number of inputs to layer l, n_out: number of outputs
-// b[l] = 0                                           // biases initialized to zero (0)
+// W[l] ~ Uniform(-limit, +limit)                  // uniform distribution (random values between -limit and +limit)
+// limit = sqrt(6 / (n_in + n_out))                // n_in: number of inputs to layer l, n_out: number of outputs
+// b[l] = 0                                        // biases initialized to zero (0)
 
 // Forward Pass:
-// a[0] = x                                           // input vector (e.g., shape 784×1)
+// a[0] = x                                        // input vector (e.g., shape 784×1)
 // for l = 1 to L:
-//     z[l] = W[l] @ a[l-1] + b[l]                    // linear combination (matrix-vector product + bias)
-//     a[l] = sigmoid(z[l])                           // apply activation function hidden layers
-//     a[l] = softmax(z[l])                           // apply activation function output layer
+//     z[l] = W[l] @ a[l-1] + b[l]                 // linear combination (matrix-vector product + bias)
+//     a[l] = sigmoid(z[l])                        // apply activation function hidden layers
+//     a[l] = softmax(z[l])                        // apply activation function output layer
 
 // Sigmoid Function:
-// sigmoid(x) = 1 / (1 + exp(-x))                      // activation function
-// sigmoid'(x) = sigmoid(x) * (1 - sigmoid(x))         // efficient derivative form
+// sigmoid(x) = 1 / (1 + exp(-x))                  // activation function
+// sigmoid'(x) = sigmoid(x) * (1 - sigmoid(x))     // efficient derivative form
 
 // Softmax Function:
-// softmax(x) = exp(x) / sum(exp(x))                  // activation function
-// softmax'(x) = softmax(x) * (1 - softmax(x))         // efficient derivative form
+// softmax(x) = exp(x) / sum(exp(x))               // activation function
+// softmax'(x) = softmax(x) * (1 - softmax(x))     // efficient derivative form
 
 // Loss (cross-entropy):
-// L = -sum(y * log(a[L]))                            // scalar loss value (output layer is a[L])
+// L = -sum(y * log(a[L]))                         // scalar loss value (output layer is a[L])
 
 // Cost - sum of all losses
 
@@ -34,18 +34,18 @@
 
 // Backpropagation - hidden layers (from L-1 down to 1):
 // for l = L−1 to 1:
-//     dσ_dz = a[l] * (1 - a[l])                       // sigmoid derivative
-//     δ[l] = (W[l+1].T @ δ[l+1]) * dσ_dz              // backpropagate error
+//     dσ_dz = a[l] * (1 - a[l])                   // sigmoid derivative
+//     δ[l] = (W[l+1].T @ δ[l+1]) * dσ_dz          // backpropagate error
 
 // Gradients:
 // for l = 1 to L:
-//     dW[l] = δ[l] @ a[l-1].T                         // outer product of error and previous activation
-//     db[l] = δ[l]                                    // bias gradient is the error term
+//     dW[l] = δ[l] @ a[l-1].T                     // outer product of error and previous activation
+//     db[l] = δ[l]                                // bias gradient is the error term
 
 // Weight Update (Gradient Descent):
 // for l = 1 to L:
-//     W[l] -= learning_rate * dW[l]                   // update weights
-//     b[l] -= learning_rate * db[l]                   // update biases
+//     W[l] -= learning_rate * dW[l]               // update weights
+//     b[l] -= learning_rate * db[l]               // update biases
 
 import fs from "fs";
 
@@ -162,27 +162,27 @@ const forwardPass = (aL0: number[]): { aL1: number[], aL2: number[], aL3: number
 const backpropagation = (aL1: number[], aL2: number[], aL3: number[], y: number[]) => {
   const { wL2, wL3 } = parameters;
 
-  // Output Layer
-  const δL3 = subtractVectors(aL3, y); // δ[L] = a[L] - y
+  // Output Layer: δ[L] = a[L] - y
+  const δL3 = subtractVectors(aL3, y);
 
-  // Hidden Layer 2
+  // Hidden Layer 2: δ[2] = (W[3].T @ δ[3]) * (a[2] * (1 - a[2]))
   const dSig_dzL2 = multiplyVectors(aL2, subtractVectorFromScalar(1, aL2));
-  const δL2 = multiplyVectors(multiplyMatrixByVector(transposeMatrix(wL3), δL3), dSig_dzL2); // δ[2] = (W[3].T @ δ[3]) * (a[2] * (1 - a[2]))
+  const δL2 = multiplyVectors(multiplyMatrixByVector(transposeMatrix(wL3), δL3), dSig_dzL2);
 
-  // Hidden Layer 1
+  // Hidden Layer 1: // δ[1] = (W[2].T @ δ[2]) * (a[1] * (1 - a[1]))
   const dSig_dzL1 = multiplyVectors(aL1, subtractVectorFromScalar(1, aL1));
-  const δL1 = multiplyVectors(multiplyMatrixByVector(transposeMatrix(wL2), δL2), dSig_dzL1); // δ[1] = (W[2].T @ δ[2]) * (a[1] * (1 - a[1]))
+  const δL1 = multiplyVectors(multiplyMatrixByVector(transposeMatrix(wL2), δL2), dSig_dzL1);
 
   return { δL1, δL2, δL3 };
 };
 
 const gradient = (aL0: number[], aL1: number[], aL2: number[], δL1: number[], δL2: number[], δL3: number[]) => {
-  // db[l] = δ[l]
+  // Gradient of biases: db[l] = δ[l]
   const db_L1 = δL1;
   const db_L2 = δL2;
   const db_L3 = δL3;
 
-  // dW[l] = δ[l] @ a[l-1].T
+  // Gradient of weights: dW[l] = δ[l] @ a[l-1].T
   const dW_L1 = outerMatrixProduct(δL1, aL0);
   const dW_L2 = outerMatrixProduct(δL2, aL1);
   const dW_L3 = outerMatrixProduct(δL3, aL2);
@@ -197,16 +197,16 @@ const trainNetwork = () => {
     const batch = trainData.slice(i, i + batchSize);
     const gradients: { dW_L1: number[][], dW_L2: number[][], dW_L3: number[][], db_L1: number[], db_L2: number[], db_L3: number[] }[] = [];
 
-    // db_avg = db_sum[l] / batch_size
+    // Average gradient of biases: db_avg = db_sum[l] / batch_size
     const db_avg = (key: 'db_L1' | 'db_L2' | 'db_L3') => divideVectorByScalar(sumVectors(gradients.map(g => g[key])), batch.length);
 
-    // dW_avg = dW_sum[l] / batch_size
+    // Average gradient of weights: dW_avg = dW_sum[l] / batch_size
     const dW_avg = (key: 'dW_L1' | 'dW_L2' | 'dW_L3') => divideMatrixByScalar(sumMatrices(gradients.map(g => g[key])), batch.length);
 
-    // b[l] -= learning_rate * db[l]
+    // Updated biases: b[l] -= learning_rate * db[l]
     const bL = (key: 'bL1' | 'bL2' | 'bL3', db_L_avg: number[]) => subtractVectors(parameters[key], multiplyVectorByScalar(db_L_avg, learningRate));
 
-    // W[l] -= learning_rate * dW[l]
+    // Updated weights: W[l] -= learning_rate * dW[l]
     const wL = (key: 'wL1' | 'wL2' | 'wL3', dW_L_avg: number[][]) => subtractMatrices(parameters[key], multiplyMatrixByScalar(dW_L_avg, learningRate));
     
     batch.forEach(([y, aL0]) => {
